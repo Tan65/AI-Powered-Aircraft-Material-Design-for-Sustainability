@@ -1,0 +1,68 @@
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+
+# Step 1: Create random synthetic data
+np.random.seed(42)  # For reproducibility
+
+n_samples = 100
+
+# Material properties (Random values for demo)
+strength = np.random.uniform(200, 1000, n_samples)         # MPa
+weight = np.random.uniform(1.5, 8.0, n_samples)             # g/cm³
+recyclability = np.random.uniform(0.5, 1.0, n_samples)      # 0 to 1 scale
+thermal_resistance = np.random.uniform(100, 600, n_samples) # °C
+
+# Target: Sustainability score (higher is better)
+# (Fake relation: strong, light, recyclable, heat-resistant materials are better)
+sustainability_score = (
+    0.4 * (strength / 1000) +
+    0.3 * (1 - (weight / 8)) +
+    0.2 * recyclability +
+    0.1 * (thermal_resistance / 600)
+) * 100  # Scale to 0-100
+
+# Create DataFrame
+materials_df = pd.DataFrame({
+    'Strength (MPa)': strength,
+    'Weight (g/cm³)': weight,
+    'Recyclability': recyclability,
+    'Thermal Resistance (°C)': thermal_resistance,
+    'Sustainability Score': sustainability_score
+})
+
+print(materials_df.head())
+
+# Step 2: Build ML Model
+X = materials_df[['Strength (MPa)', 'Weight (g/cm³)', 'Recyclability', 'Thermal Resistance (°C)']]
+y = materials_df['Sustainability Score']
+
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X, y)
+
+# Step 3: Predict sustainability of new random materials
+new_materials = pd.DataFrame({
+    'Strength (MPa)': np.random.uniform(200, 1000, 5),
+    'Weight (g/cm³)': np.random.uniform(1.5, 8.0, 5),
+    'Recyclability': np.random.uniform(0.5, 1.0, 5),
+    'Thermal Resistance (°C)': np.random.uniform(100, 600, 5),
+})
+
+predicted_scores = model.predict(new_materials)
+
+# Show predictions
+new_materials['Predicted Sustainability Score'] = predicted_scores
+print("\nNew Material Predictions:")
+print(new_materials)
+
+# Step 4: Visualize feature importance
+importances = model.feature_importances_
+features = X.columns
+
+plt.figure(figsize=(8,6))
+plt.barh(features, importances, color='skyblue')
+plt.xlabel('Importance')
+plt.title('Feature Importance for Sustainable Material Selection')
+plt.grid(True)
+plt.show()
